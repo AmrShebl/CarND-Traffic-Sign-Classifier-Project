@@ -167,7 +167,7 @@ with tf.Session() as sess:
             end_index=start_index+batch_size
             batch_x = X_train[start_index:end_index]
             batch_y = y_train[start_index:end_index]
-            sess.run(training_operation,feed_dict={x:batch_x,y:batch_y, keep_prob:0.5})
+            sess.run(training_operation,feed_dict={x:batch_x,y:batch_y, keep_prob:0.25})
         accuracy = evaluate_accuracy(X_train,y_train)
         print("The accuracy of the training data is {}".format(accuracy))
     accuracy = evaluate_accuracy(X_valid, y_valid)
