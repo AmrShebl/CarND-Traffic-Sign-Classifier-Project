@@ -88,7 +88,7 @@ X_test=(X_test-128)/128
 ### Define your architecture here.
 ### Feel free to use as many code cells as needed.
 import tensorflow as tf
-def leNet(X):
+def leNet(X, keep_prob):
     mu=0
     std = 0.1
     #convolution layer
@@ -111,9 +111,10 @@ def leNet(X):
     #output dimensions: 400
     weight1=tf.Variable(tf.truncated_normal((400,120), mean=mu, stddev= std))
     bias1=tf.Variable(tf.zeros(120))
-    layer=tf.add(tf.matmul(layer,weight1),bias1);
+    layer=tf.add(tf.matmul(layer,weight1),bias1)
     layer=tf.nn.relu(layer)
     #output dimensions: 120
+    layer=tf.nn.dropout(layer,keep_prob)
     weight2=tf.Variable(tf.truncated_normal((120,84), mean=mu, stddev= std))
     bias2=tf.Variable(tf.zeros(84))
     layer=tf.add(tf.matmul(layer,weight2),bias2)
@@ -134,11 +135,12 @@ from sklearn.utils import shuffle
 x = tf.placeholder(tf.float32, (None,32,32,1))
 y = tf.placeholder(tf.int32, (None))
 one_hot = tf.one_hot(y,43)
+keep_prob = tf.placeholder(tf.float32)
 
 learning_rate=0.001
 batch_size=400
-epochs=15
-logits = leNet(x)
+epochs=30
+logits = leNet(x, keep_prob)
 cross_entropy =tf.nn.softmax_cross_entropy_with_logits(labels=one_hot,logits=logits)
 loss = tf.reduce_mean(cross_entropy)
 optimizer=tf.train.AdamOptimizer(learning_rate)
@@ -152,7 +154,7 @@ def evaluate_accuracy(xIn, yIn):
     for start_index in range(0, len(xIn)-batch_size, batch_size):
         batch_x=xIn[start_index:start_index+batch_size]
         batch_y=yIn[start_index:start_index+batch_size]
-        accuracy+=sess.run(accuracy_operation, feed_dict={x:batch_x, y:batch_y})
+        accuracy+=sess.run(accuracy_operation, feed_dict={x:batch_x, y:batch_y, keep_prob:1})
         den+=1
     return accuracy/den
 
@@ -165,7 +167,7 @@ with tf.Session() as sess:
             end_index=start_index+batch_size
             batch_x = X_train[start_index:end_index]
             batch_y = y_train[start_index:end_index]
-            sess.run(training_operation,feed_dict={x:batch_x,y:batch_y})
+            sess.run(training_operation,feed_dict={x:batch_x,y:batch_y, keep_prob:0.5})
         accuracy = evaluate_accuracy(X_train,y_train)
         print("The accuracy of the training data is {}".format(accuracy))
     accuracy = evaluate_accuracy(X_valid, y_valid)
