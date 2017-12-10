@@ -4,3 +4,6 @@ data
 models
 *.swp
 *.p
+/trial.py
+/.idea/workspace.xml
+/.idea/workspace.xml
