@@ -119,6 +119,7 @@ def leNet(X, keep_prob):
     bias2=tf.Variable(tf.zeros(84))
     layer=tf.add(tf.matmul(layer,weight2),bias2)
     layer=tf.nn.relu(layer)
+    layer=tf.nn.dropout(layer,keep_prob)
     #output dimensions: 84
     weight3=tf.Variable(tf.truncated_normal((84,43), mean=mu, stddev= std))
     bias3=tf.Variable(tf.zeros(43))
@@ -167,7 +168,7 @@ with tf.Session() as sess:
             end_index=start_index+batch_size
             batch_x = X_train[start_index:end_index]
             batch_y = y_train[start_index:end_index]
-            sess.run(training_operation,feed_dict={x:batch_x,y:batch_y, keep_prob:0.25})
+            sess.run(training_operation,feed_dict={x:batch_x,y:batch_y, keep_prob:0.4})
         accuracy = evaluate_accuracy(X_train,y_train)
         print("The accuracy of the training data is {}".format(accuracy))
     accuracy = evaluate_accuracy(X_valid, y_valid)
