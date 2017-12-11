@@ -138,7 +138,7 @@ one_hot = tf.one_hot(y,43)
 keep_prob = tf.placeholder(tf.float32)
 
 learning_rate=0.001
-batch_size=400
+batch_size=50
 epochs=30
 logits = leNet(x, keep_prob)
 cross_entropy =tf.nn.softmax_cross_entropy_with_logits(labels=one_hot,logits=logits)
@@ -172,3 +172,5 @@ with tf.Session() as sess:
         print("The accuracy of the training data is {}".format(accuracy))
     accuracy = evaluate_accuracy(X_valid, y_valid)
     print("The accuracy of the validation set is {}".format(accuracy))
+    accuracy = evaluate_accuracy(X_test, y_test)
+    print("The accuracy of the test set is {}".format(accuracy))
