@@ -159,6 +159,9 @@ def evaluate_accuracy(xIn, yIn):
         den+=1
     return accuracy/den
 
+saver = tf.train.Saver()
+model_file="./final_model.ckpt"
+
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     for i in range(epochs):
@@ -175,3 +178,4 @@ with tf.Session() as sess:
     print("The accuracy of the validation set is {}".format(accuracy))
     accuracy = evaluate_accuracy(X_test, y_test)
     print("The accuracy of the test set is {}".format(accuracy))
+    saver.save(sess,model_file)

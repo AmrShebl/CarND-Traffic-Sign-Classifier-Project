@@ -7,3 +7,9 @@ models
 /trial.py
 /.idea/workspace.xml
 /.idea/workspace.xml
+/.idea/workspace.xml
+/__pycache__/main.cpython-35.pyc
+/checkpoint
+/final_model.ckpt.data-00000-of-00001
+/final_model.ckpt.index
+/final_model.ckpt.meta
