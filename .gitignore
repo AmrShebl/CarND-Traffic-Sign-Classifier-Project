@@ -13,3 +13,5 @@ models
 /final_model.ckpt.data-00000-of-00001
 /final_model.ckpt.index
 /final_model.ckpt.meta
+/.idea/workspace.xml
+/Traffic_Sign_Classifier.ipynb

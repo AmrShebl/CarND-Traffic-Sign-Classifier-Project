@@ -18,7 +18,6 @@ with open(testing_file, mode='rb') as f:
 X_train, y_train = train['features'], train['labels']
 X_valid, y_valid = valid['features'], valid['labels']
 X_test, y_test = test['features'], test['labels']
-
 #STEP1.0
 ### Replace each question mark with the appropriate value.
 ### Use python, pandas or numpy methods rather than hard coding the results
@@ -138,26 +137,39 @@ y = tf.placeholder(tf.int32, (None))
 one_hot = tf.one_hot(y,43)
 keep_prob = tf.placeholder(tf.float32)
 
-learning_rate=0.001
-batch_size=50
-epochs=30
+learning_rate=0.002
+#batch_size=34000
+epochs=1200
 logits = leNet(x, keep_prob)
+probabilities=tf.nn.softmax(logits)
 cross_entropy =tf.nn.softmax_cross_entropy_with_logits(labels=one_hot,logits=logits)
 loss = tf.reduce_mean(cross_entropy)
 optimizer=tf.train.AdamOptimizer(learning_rate)
 training_operation= optimizer.minimize(loss)
 accuracy_operation= tf.reduce_mean(tf.cast(tf.equal(tf.argmax(one_hot,1),tf.argmax(logits,1)),tf.float32))
+selected_class=tf.argmax(probabilities,1)
+top_5 = tf.nn.top_k(probabilities,k=5)
 
 def evaluate_accuracy(xIn, yIn):
     sess = tf.get_default_session()
-    accuracy = 0
-    den = 0
-    for start_index in range(0, len(xIn)-batch_size, batch_size):
-        batch_x=xIn[start_index:start_index+batch_size]
-        batch_y=yIn[start_index:start_index+batch_size]
-        accuracy+=sess.run(accuracy_operation, feed_dict={x:batch_x, y:batch_y, keep_prob:1})
-        den+=1
-    return accuracy/den
+    # accuracy = 0
+    # den = 0
+    # start_index=0
+    # for start_index in range(0, len(xIn)-batch_size, batch_size):
+    #     batch_x=xIn[start_index:start_index+batch_size]
+    #     batch_y=yIn[start_index:start_index+batch_size]
+    #     accuracy+= batch_size * sess.run(accuracy_operation, feed_dict={x:batch_x, y:batch_y, keep_prob:1})
+    #     den+=batch_size
+    # if start_index==0:
+    #     accuracy+=len(xIn)* sess.run(accuracy_operation, feed_dict={x:xIn, y:yIn, keep_prob:1})
+    #     den+=len(xIn)
+    # else:
+    #     batch_x=xIn[start_index+batch_size:]
+    #     batch_y=yIn[start_index+batch_size:]
+    #     accuracy += (len(xIn)-start_index-batch_size) * sess.run(accuracy_operation, feed_dict={x: batch_x, y: batch_y, keep_prob: 1})
+    #     den += len(xIn)-start_index-batch_size
+    # return accuracy/den
+    return sess.run(accuracy_operation,feed_dict={x:xIn,y:yIn,keep_prob:1})
 
 saver = tf.train.Saver()
 model_file="./final_model.ckpt"
@@ -167,11 +179,16 @@ with tf.Session() as sess:
     for i in range(epochs):
         print(i)
         X_train, y_train = shuffle(X_train,y_train)
-        for start_index in range(0,n_train-batch_size,batch_size):
-            end_index=start_index+batch_size
-            batch_x = X_train[start_index:end_index]
-            batch_y = y_train[start_index:end_index]
-            sess.run(training_operation,feed_dict={x:batch_x,y:batch_y, keep_prob:0.4})
+        # for start_index in range(0,n_train-batch_size,batch_size):
+        #     end_index=start_index+batch_size
+        #     batch_x = X_train[start_index:end_index]
+        #     batch_y = y_train[start_index:end_index]
+        #     sess.run(training_operation,feed_dict={x:batch_x,y:batch_y, keep_prob:0.4})
+        # start_index = end_index
+        # batch_x = X_train[start_index:]
+        # batch_y = y_train[start_index:]
+        # sess.run(training_operation, feed_dict={x: batch_x, y: batch_y, keep_prob: 0.4})
+        sess.run(training_operation,feed_dict={x:X_train,y:y_train,keep_prob:0.4})
         accuracy = evaluate_accuracy(X_train,y_train)
         print("The accuracy of the training data is {}".format(accuracy))
     accuracy = evaluate_accuracy(X_valid, y_valid)
@@ -179,3 +196,73 @@ with tf.Session() as sess:
     accuracy = evaluate_accuracy(X_test, y_test)
     print("The accuracy of the test set is {}".format(accuracy))
     saver.save(sess,model_file)
+
+#Step 3.0
+### Load the images and plot them here.
+### Feel free to use as many code cells as needed.
+from PIL import Image as pilImage
+def PIL2array(img):
+    r = np.array(img.getdata()).reshape(img.size[1], img.size[0], 3)
+    return r.tolist()
+test_image1 = pilImage.open('./WebImages/TestImage1.jpg')
+test_image2 = pilImage.open('./WebImages/TestImage2.jpg')
+test_image3 = pilImage.open('./WebImages/TestImage3.jpg')
+test_image4 = pilImage.open('./WebImages/TestImage4.jpg')
+test_image5 = pilImage.open('./WebImages/TestImage5.jpg')
+correct_estimates=np.array([33, 3, 27, 28, 25])
+input_images = [test_image1, test_image2, test_image3, test_image4, test_image5]
+f, plots = plt.subplots(1, len(input_images))
+for i, image in enumerate(input_images):
+    plots[i].imshow(image)
+    plots[i].set_xticks([], [])
+    plots[i].set_yticks([], [])
+plt.show()
+#step3.1
+### Run the predictions here and use the model to output the prediction for each image.
+### Make sure to pre-process the images with the same pre-processing pipeline used earlier.
+### Feel free to use as many code cells as needed.
+test_images = input_images[:]
+for i in range(len(test_images)):
+    test_images[i]= PIL2array(test_images[i].resize((32,32),pilImage.ANTIALIAS))
+test_images=np.array(test_images)
+test_images=rgb2gray(test_images)
+test_images=test_images-128/128
+with tf.Session() as sess:
+    saver.restore(sess, model_file)
+    final_output = sess.run(selected_class, feed_dict={x: test_images, keep_prob: 1})
+import csv
+with open('signnames.csv') as csvfile:
+    reader=csv.DictReader(csvfile)
+    signNames={int(row['ClassId']):row['SignName'] for row in reader}
+f, plots = plt.subplots(len(input_images)//2+1,2)
+for i, image in enumerate(input_images):
+    plots[i//2][i%2].imshow(image)
+    plots[i//2][i%2].set_title(signNames[final_output[i]])
+    plots[i//2][i%2].set_xticks([], [])
+    plots[i//2][i%2].set_yticks([], [])
+plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+plt.show()
+print(final_output)
+final_output=np.array(final_output)
+final_test_accuracy = np.average(final_output==correct_estimates)
+print("The accuracy of detecting images from the web is {}".format(final_test_accuracy))
+
+
+with tf.Session() as sess:
+    saver.restore(sess, model_file)
+    final_top_5 = sess.run(top_5,feed_dict={x:test_images, keep_prob:1})
+final_top_5_strings=['']*len(final_top_5.values)
+for i in range(len(final_top_5.values)):
+    string_i=""
+    for value, index in zip(final_top_5.values[i], final_top_5.indices[i]):
+        string_i+=signNames[index]+": "+ str(value)+"\n"
+    final_top_5_strings[i]=string_i
+f, plots = plt.subplots(2,len(input_images)//2+1)
+for i, image in enumerate(input_images):
+    plots[i%2][i//2].imshow(image)
+    plots[i%2][i//2].set_title(final_top_5_strings[i])
+plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+plt.show()
+
+
+
